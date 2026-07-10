@@ -1,0 +1,20 @@
+# ---- ChargeNet backend ----
+
+# Build output
+/bin/
+/server
+*.exe
+*.test
+*.out
+coverage.out
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+
+# OS / editor
+.DS_Store
+*.swp
+.idea/
+.vscode/
