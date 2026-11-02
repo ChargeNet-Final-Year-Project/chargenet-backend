@@ -687,20 +687,20 @@ func (m *Manager) Stop(ctx context.Context, userID, sessionID string) (*store.Se
 	case err == nil:
 		return m.waitFor(ctx, sessionID, sess), nil
 	case gateway.IsCode(err, gateway.CodeSessionNotFound):
-		// The transport no longer knows the session (the backend was restarted,
-		// or it never really started): settle it from what the row holds.
-		settled, serr := m.settle(ctx, store.SettleInput{
-			SessionID: sessionID,
-			Status:    store.StatusCompleted,
-			Reason:    simulation.ReasonUser,
-			State:     telemetryOf(*sess),
-		})
-		if serr != nil {
-			return nil, serr
+		// A missing remote session is not terminal evidence. A terminal event
+		// may have settled the row while the stop command was in flight; only
+		// that durable result can authorize an idempotent successful response.
+		row, rerr := m.store.GetSession(ctx, userID, sessionID)
+		if rerr != nil {
+			return nil, rerr
 		}
-		m.clearLive(sessionID)
-		m.hub.Complete(sessionID, Frame{Session: *settled})
-		return settled, nil
+		if row.Terminal() {
+			return row, nil
+		}
+		// Keep tracking and reserving funds until authoritative telemetry
+		// arrives. The local session exists, so this is a confirmation failure
+		// (502), not a driver-facing session-not-found response (404).
+		return nil, Errorf(CodeCPOUnreachable, "The operator could not confirm that charging stopped. Your session remains active; retry or wait for an update.")
 	default:
 		return nil, fromGateway(err)
 	}
