@@ -790,7 +790,9 @@ func TestRestartFinishesDurableSettlementAndReleasesHold(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if wallet.Reserved != 0 || wallet.Balance != 100-done.TotalCost {
+	// Database decimal amounts and floating-point subtraction can differ below
+	// a cent even when the persisted balance and deduction agree.
+	if wallet.Reserved != 0 || math.Abs(wallet.Balance-(100-done.TotalCost)) > 0.001 {
 		t.Fatalf("reconciled wallet %+v", wallet)
 	}
 	if n, _ := h.debitTotals(user); n != 1 {
