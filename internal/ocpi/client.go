@@ -16,7 +16,7 @@ import (
 	"github.com/chargenet/chargenet-backend/internal/store"
 )
 
-// The outbound half of OCPI 2.3.0: until OCPI receivers, ChargeNet only
+// The outbound half of OCPI 2.2.1: until OCPI receivers, ChargeNet only
 // *received* a CPO's locations, tariffs, sessions, CDRs and command results.
 // [Client] is the other direction — the HTTP calls ChargeNet makes to a partner,
 // authenticated with the Token B the credentials exchange handed it.
@@ -29,7 +29,7 @@ const DefaultTimeout = 5 * time.Second
 const maxResponseBody = 1 << 20
 
 // The tracing headers ChargeNet sends on every call. Neither is defined by
-// OCPI; both are common tracing headers and both are named as they are
+// OCPI 2.2.1; both are de-facto standards and both are named as they are
 // spelled in the wild, so a partner that logs them can correlate its side.
 const (
 	headerRequestID     = "X-Request-ID"
@@ -101,7 +101,7 @@ func (c *Client) Do(ctx context.Context, cpo *store.CpoAccount, method, path str
 
 	url := strings.TrimRight(cpo.BaseURL, "/") + path
 	parts := strings.Split(strings.Trim(path, "/"), "/")
-	if len(parts) >= 2 && parts[0] == VersionNumber {
+	if len(parts) >= 2 && (parts[0] == VersionNumber || parts[0] == LegacyVersion) {
 		if endpoint := cpo.ModuleEndpoints[parts[1]]; endpoint != "" {
 			url = strings.TrimRight(endpoint, "/")
 			if len(parts) > 2 {
@@ -136,6 +136,9 @@ func (c *Client) attempt(ctx context.Context, cpo *store.CpoAccount, method, url
 	var reader io.Reader
 	if payload != nil {
 		reader = bytes.NewReader(payload)
+	}
+	if cpo.OCPIVersion == LegacyVersion {
+		url = strings.Replace(url, "/2.3.0/", "/2.2.1/", 1)
 	}
 	req, err := http.NewRequestWithContext(ctx, method, url, reader)
 	if err != nil {

@@ -51,7 +51,7 @@ type session struct {
 	stopOnce sync.Once
 }
 
-// startRequest is the body of `POST /2.3.0/commands/START_SESSION`.
+// startRequest is the body of `POST /2.2.1/commands/START_SESSION`.
 type startRequest struct {
 	ChargeNet              *emulatorChargeParams `json:"chargenet,omitempty"`
 	ResponseURL            string                `json:"response_url"`
@@ -62,13 +62,13 @@ type startRequest struct {
 	AuthorizationReference string                `json:"authorization_reference"`
 }
 
-// stopRequest is the body of `POST /2.3.0/commands/STOP_SESSION`.
+// stopRequest is the body of `POST /2.2.1/commands/STOP_SESSION`.
 type stopRequest struct {
 	ResponseURL string `json:"response_url"`
 	SessionID   string `json:"session_id"`
 }
 
-// unlockRequest is the body of `POST /2.3.0/commands/UNLOCK_CONNECTOR`.
+// unlockRequest is the body of `POST /2.2.1/commands/UNLOCK_CONNECTOR`.
 type unlockRequest struct {
 	ResponseURL string `json:"response_url"`
 	LocationID  string `json:"location_id"`
@@ -108,7 +108,7 @@ func (e *Emulator) stop(s *session) {
 	s.stopOnce.Do(func() { close(s.stop) })
 }
 
-// handleStartSession serves POST /2.3.0/commands/START_SESSION.
+// handleStartSession serves POST /2.2.1/commands/START_SESSION.
 // It answers ACCEPTED at once and runs the charge in the background, exactly as
 // a real CPO does: the driver learns the charge is running from the Session
 // pushes that follow, not from this call.
@@ -136,7 +136,7 @@ func (e *Emulator) handleStartSession(w http.ResponseWriter, r *http.Request) {
 	}()
 }
 
-// handleStopSession serves POST /2.3.0/commands/STOP_SESSION. It answers
+// handleStopSession serves POST /2.2.1/commands/STOP_SESSION. It answers
 // ACCEPTED and wakes the running session, which pushes its final state and CDR.
 func (e *Emulator) handleStopSession(w http.ResponseWriter, r *http.Request) {
 	if e.Scenario().Offline {
@@ -159,7 +159,7 @@ func (e *Emulator) handleStopSession(w http.ResponseWriter, r *http.Request) {
 	e.postCommandResult(e.runCtx, req.ResponseURL, ocpi.CommandStopSession, ocpi.CommandAccepted)
 }
 
-// handleUnlockConnector serves POST /2.3.0/commands/UNLOCK_CONNECTOR: it frees
+// handleUnlockConnector serves POST /2.2.1/commands/UNLOCK_CONNECTOR: it frees
 // the cable by putting the EVSE back to AVAILABLE.
 func (e *Emulator) handleUnlockConnector(w http.ResponseWriter, r *http.Request) {
 	if e.Scenario().Offline {
@@ -337,7 +337,7 @@ func (e *Emulator) pushSession(ctx context.Context, s *session, status, endDateT
 		ConnectorID:            s.connectorID,
 		Currency:               s.connector.Currency,
 		Status:                 status,
-		TotalCost:              &ocpi.Price{BeforeTaxes: s.state.Cost},
+		TotalCost:              &ocpi.Price{ExclVAT: s.state.Cost},
 		ChargeNet: &ocpi.SessionTelemetry{
 			CurrentPowerKW:  s.state.CurrentPowerKW,
 			BatterySoC:      s.state.BatterySoC,
@@ -421,7 +421,7 @@ func (e *Emulator) pushCDR(ctx context.Context, s *session) {
 				{Type: "TIME", Volume: hours},
 			},
 		}},
-		TotalCost:   ocpi.Price{BeforeTaxes: s.state.Cost},
+		TotalCost:   ocpi.Price{ExclVAT: s.state.Cost},
 		TotalEnergy: s.state.KWhDelivered,
 		TotalTime:   hours,
 		LastUpdated: nowRFC3339(),

@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS cpo_partners (
   token_b TEXT,
   token_c TEXT,
   token_a_used_at TIMESTAMPTZ,
-  ocpi_version VARCHAR(8) DEFAULT '2.3.0',
+  ocpi_version VARCHAR(8) DEFAULT '2.2.1',
   handshake_status VARCHAR(16) NOT NULL DEFAULT 'NOT_STARTED',
   handshake_log JSONB,
   bank_name VARCHAR(64),

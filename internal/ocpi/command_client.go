@@ -37,7 +37,7 @@ func NewCommandClient(client *Client, publicBaseURL string) *CommandClient {
 }
 
 // ResponseURL is where a CPO posts the asynchronous result of one command: the
-// receiver path `{PUBLIC_BASE_URL}/ocpi/emsp/2.3.0/commands/{command}/{uid}`,
+// receiver path `{PUBLIC_BASE_URL}/ocpi/emsp/2.2.1/commands/{command}/{uid}`,
 // which is exactly the callback [Server.handleCommands] serves.
 //
 // `uid` is the handle ChargeNet wants the answer keyed by, and the gateway
@@ -48,7 +48,7 @@ func (c *CommandClient) ResponseURL(command, uid string) string {
 	return c.baseURL + VersionURLPath + "/" + ModuleCommands + "/" + command + "/" + url.PathEscape(uid)
 }
 
-// startSessionPayload is the body of `POST /2.3.0/commands/START_SESSION`.
+// startSessionPayload is the body of `POST /2.2.1/commands/START_SESSION`.
 // The token is the driver's because ChargeNet starts every charge on
 // behalf of the APP_USER the driver authenticated as, and `auth_method` is
 // COMMAND for the same reason.
@@ -62,7 +62,7 @@ type startSessionPayload struct {
 	AuthorizationReference string `json:"authorization_reference"`
 }
 
-// stopSessionPayload is the body of `POST /2.3.0/commands/STOP_SESSION`. The CPO
+// stopSessionPayload is the body of `POST /2.2.1/commands/STOP_SESSION`. The CPO
 // is named the session by its own id — the one it gave ChargeNet the first time
 // it pushed the session (store.LinkOCPISession).
 type stopSessionPayload struct {
@@ -70,7 +70,7 @@ type stopSessionPayload struct {
 	SessionID   string `json:"session_id"`
 }
 
-// unlockConnectorPayload is the body of `POST /2.3.0/commands/UNLOCK_CONNECTOR`,
+// unlockConnectorPayload is the body of `POST /2.2.1/commands/UNLOCK_CONNECTOR`,
 // the one command with no session to name.
 type unlockConnectorPayload struct {
 	ResponseURL string `json:"response_url"`
@@ -88,7 +88,7 @@ func (c *CommandClient) StartSession(ctx context.Context, cpo *store.CpoAccount,
 		extension = extensions[0]
 	}
 	return c.send(ctx, cpo, CommandStartSession, startSessionPayload{
-		ResponseURL:            c.ResponseURL(CommandStartSession, target.SessionID),
+		ResponseURL:            c.responseURLFor(cpo, CommandStartSession, target.SessionID),
 		Token:                  Token{UID: target.UserID, Type: tokenTypeAppUser, ContractID: target.UserID, CountryCode: EMSPCountryCode, PartyID: EMSPPartyID, Issuer: EMSPName, Valid: true, Whitelist: "ALWAYS", LastUpdated: time.Now().UTC().Format(time.RFC3339)},
 		LocationID:             target.LocationID,
 		EVSEUID:                target.EVSEUID,
@@ -103,7 +103,7 @@ func (c *CommandClient) StartSession(ctx context.Context, cpo *store.CpoAccount,
 // whose stop it is confirming.
 func (c *CommandClient) StopSession(ctx context.Context, cpo *store.CpoAccount, target *store.OCPICommandTarget) (CommandResponse, error) {
 	return c.send(ctx, cpo, CommandStopSession, stopSessionPayload{
-		ResponseURL: c.ResponseURL(CommandStopSession, target.SessionID),
+		ResponseURL: c.responseURLFor(cpo, CommandStopSession, target.SessionID),
 		SessionID:   target.OCPISessionID,
 	})
 }
@@ -112,7 +112,7 @@ func (c *CommandClient) StopSession(ctx context.Context, cpo *store.CpoAccount, 
 // the EVSE uid, because there is no session behind it.
 func (c *CommandClient) UnlockConnector(ctx context.Context, cpo *store.CpoAccount, target *store.OCPICommandTarget) (CommandResponse, error) {
 	return c.send(ctx, cpo, CommandUnlockConnector, unlockConnectorPayload{
-		ResponseURL: c.ResponseURL(CommandUnlockConnector, target.EVSEUID),
+		ResponseURL: c.responseURLFor(cpo, CommandUnlockConnector, target.EVSEUID),
 		LocationID:  target.LocationID,
 		EVSEUID:     target.EVSEUID,
 		ConnectorID: target.OCPIConnectorID,
@@ -141,4 +141,12 @@ func (c *CommandClient) send(ctx context.Context, cpo *store.CpoAccount, command
 			"the CPO's answer to %s could not be read: %v", command, err)
 	}
 	return res, nil
+}
+
+func (c *CommandClient) responseURLFor(cpo *store.CpoAccount, command, id string) string {
+	value := c.ResponseURL(command, id)
+	if cpo.OCPIVersion == LegacyVersion {
+		return strings.Replace(value, "/2.3.0/", "/2.2.1/", 1)
+	}
+	return value
 }

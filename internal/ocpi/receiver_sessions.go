@@ -132,7 +132,7 @@ func sessionState(sess store.Session, body Session) simulation.State {
 		Cost:            sess.TotalCost,
 	}
 	if body.TotalCost != nil {
-		st.Cost = body.TotalCost.BeforeTaxes
+		st.Cost = body.TotalCost.ExclVAT
 	}
 
 	if ext := body.ChargeNet; ext != nil {

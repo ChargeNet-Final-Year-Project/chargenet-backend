@@ -117,7 +117,7 @@ func (h *handshaker) credentials() (string, string) {
 	return StepPass, "Token B and Token C are registered."
 }
 
-// versions is step 2: `GET {base_url}/versions` must advertise OCPI 2.3.0.
+// versions is step 2: `GET {base_url}/versions` must advertise OCPI 2.2.1.
 func (h *handshaker) versions() (string, string) {
 	data, err := h.client.Do(h.ctx, h.cpo, http.MethodGet, "/versions", nil)
 	if err != nil {
@@ -127,21 +127,23 @@ func (h *handshaker) versions() (string, string) {
 	if err := json.Unmarshal(data, &list); err != nil {
 		return StepFail, "The versions response was not an OCPI list: " + err.Error()
 	}
-	for _, v := range list {
-		if v.Version == VersionNumber {
-			h.cpo.OCPIVersion = VersionNumber
-			if h.st != nil {
-				if _, err := h.st.DB.ExecContext(h.ctx, `UPDATE cpo_partners SET ocpi_version=$2 WHERE id=$1`, h.cpo.ID, VersionNumber); err != nil {
-					return StepFail, err.Error()
+	for _, preferred := range []string{VersionNumber, LegacyVersion} {
+		for _, v := range list {
+			if v.Version == preferred {
+				h.cpo.OCPIVersion = preferred
+				if h.st != nil {
+					if _, err := h.st.DB.ExecContext(h.ctx, `UPDATE cpo_partners SET ocpi_version=$2 WHERE id=$1`, h.cpo.ID, preferred); err != nil {
+						return StepFail, err.Error()
+					}
 				}
+				return StepPass, "The CPO serves OCPI " + preferred + "."
 			}
-			return StepPass, "The CPO serves OCPI " + VersionNumber + "."
 		}
 	}
 	return StepFail, "The CPO does not list a supported OCPI version."
 }
 
-// details is step 3: `GET {base_url}/2.3.0/` must expose the locations and
+// details is step 3: `GET {base_url}/2.2.1/` must expose the locations and
 // commands modules ChargeNet needs to charge a driver.
 func (h *handshaker) details() (string, string) {
 	path := "/" + VersionNumber + "/"
@@ -152,9 +154,6 @@ func (h *handshaker) details() (string, string) {
 	var d VersionDetails
 	if err := json.Unmarshal(data, &d); err != nil {
 		return StepFail, "The version-details response was not an OCPI object: " + err.Error()
-	}
-	if d.Version != VersionNumber {
-		return StepFail, "The CPO returned the wrong OCPI version details."
 	}
 	has := func(module string) bool {
 		for _, e := range d.Endpoints {

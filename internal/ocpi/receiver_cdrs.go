@@ -123,7 +123,7 @@ func (s *Server) postCDR(w http.ResponseWriter, r *http.Request, urlCDRID string
 		DurationSeconds: int(math.Round(body.TotalTime * secondsPerHour)),
 		BatterySoC:      sess.BatterySoC,
 		CurrentPowerKW:  sess.CurrentPowerKW,
-		TotalCost:       body.TotalCost.BeforeTaxes,
+		TotalCost:       body.TotalCost.ExclVAT,
 	}
 	settled := !sess.Terminal()
 	if settled {

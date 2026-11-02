@@ -12,10 +12,10 @@ func (s *Server) handleVersions(w http.ResponseWriter, r *http.Request) {
 	OK(w, http.StatusOK, []Version{{
 		Version: VersionNumber,
 		URL:     s.absolute(VersionURLPath) + "/",
-	}})
+	}, {Version: LegacyVersion, URL: s.absolute("/ocpi/emsp/2.2.1/")}})
 }
 
-// handleVersionDetails answers `GET /ocpi/emsp/2.3.0/` with the module list.
+// handleVersionDetails answers `GET /ocpi/emsp/2.2.1/` with the module list.
 //
 // The route is registered as a subtree so ServeMux sends every path under it
 // here; the equality check below keeps an unknown path from being answered with
@@ -54,7 +54,7 @@ func (s *Server) endpoints() []Endpoint {
 	return out
 }
 
-// trimTrailingSlash drops one trailing slash so `/2.3.0/` and `/2.3.0` compare
+// trimTrailingSlash drops one trailing slash so `/2.2.1/` and `/2.2.1` compare
 // equal without turning `/` into an empty path.
 func trimTrailingSlash(p string) string {
 	if len(p) > 1 && strings.HasSuffix(p, "/") {

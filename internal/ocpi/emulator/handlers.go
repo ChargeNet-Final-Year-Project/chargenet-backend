@@ -113,7 +113,7 @@ func (e *Emulator) handleVersions(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// handleVersionDetails serves GET /2.3.0/ — the endpoint list a registered
+// handleVersionDetails serves GET /2.2.1/ — the endpoint list a registered
 // partner reads. A CPO SENDs locations, tariffs and commands.
 func (e *Emulator) handleVersionDetails(w http.ResponseWriter, r *http.Request) {
 	root := e.SelfURL() + "/" + ocpi.VersionNumber + "/"
@@ -127,7 +127,7 @@ func (e *Emulator) handleVersionDetails(w http.ResponseWriter, r *http.Request) 
 	})
 }
 
-// handleLocations serves GET /2.3.0/locations: the CPO's own locations, rendered
+// handleLocations serves GET /2.2.1/locations: the CPO's own locations, rendered
 // from the rows the platform seeded for it, so the handshake test and OCPI
 // gateway pull sync have data to read.
 func (e *Emulator) handleLocations(w http.ResponseWriter, r *http.Request) {
@@ -139,7 +139,7 @@ func (e *Emulator) handleLocations(w http.ResponseWriter, r *http.Request) {
 	ocpi.OK(w, http.StatusOK, locs)
 }
 
-// handleTariffs serves GET /2.3.0/tariffs: the prices the emulator's connectors
+// handleTariffs serves GET /2.2.1/tariffs: the prices the emulator's connectors
 // reference.
 func (e *Emulator) handleTariffs(w http.ResponseWriter, r *http.Request) {
 	ocpi.OK(w, http.StatusOK, e.tariffDocs(r.Context()))
