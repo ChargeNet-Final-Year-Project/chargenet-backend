@@ -1,4 +1,4 @@
-// Package ocpi implements the eMSP half of OCPI 2.3.0:
+// Package ocpi implements the eMSP half of OCPI 2.2.1:
 // ChargeNet publishes the versions/credentials endpoints a CPO registers
 // against, validates the tokens it hands out, and — from OCPI receivers — receives the
 // CPO's locations, tariffs, sessions, CDRs and command results.
@@ -8,10 +8,7 @@
 // with the platform without a translation layer.
 package ocpi
 
-import (
-	"encoding/json"
-	"errors"
-)
+import "encoding/json"
 
 // OCPI version ChargeNet speaks.
 const (
@@ -103,7 +100,7 @@ type Endpoint struct {
 	URL        string `json:"url"`
 }
 
-// VersionDetails is the payload of `GET /ocpi/emsp/2.3.0/`.
+// VersionDetails is the payload of `GET /ocpi/emsp/2.2.1/`.
 type VersionDetails struct {
 	Version   string     `json:"version"`
 	Endpoints []Endpoint `json:"endpoints"`
@@ -223,10 +220,11 @@ type Tariff struct {
 	LastUpdated        string          `json:"last_updated,omitempty"`
 }
 
-// Price is the OCPI price breakdown used by charge totals.
+// Price is an OCPI price breakdown; ChargeNet stores VAT-inclusive pricing, so
+// only `excl_vat` is ever populated.
 type Price struct {
-	BeforeTaxes float64     `json:"before_taxes"`
-	Taxes       []TaxAmount `json:"taxes,omitempty"`
+	ExclVAT float64     `json:"-"` // internal compatibility name; wire shape is versioned.
+	Taxes   []TaxAmount `json:"taxes,omitempty"`
 }
 type TaxAmount struct {
 	Name          string   `json:"name"`
@@ -235,19 +233,28 @@ type TaxAmount struct {
 	AccountNumber string   `json:"account_number,omitempty"`
 }
 
+func (p Price) MarshalJSON() ([]byte, error) {
+	type wire struct {
+		BeforeTaxes float64     `json:"before_taxes"`
+		Taxes       []TaxAmount `json:"taxes,omitempty"`
+	}
+	return json.Marshal(wire{p.ExclVAT, p.Taxes})
+}
 func (p *Price) UnmarshalJSON(raw []byte) error {
-	var value struct {
+	var v struct {
 		BeforeTaxes *float64    `json:"before_taxes"`
+		ExclVAT     *float64    `json:"excl_vat"`
 		Taxes       []TaxAmount `json:"taxes"`
 	}
-	if err := json.Unmarshal(raw, &value); err != nil {
+	if err := json.Unmarshal(raw, &v); err != nil {
 		return err
 	}
-	if value.BeforeTaxes == nil {
-		return errors.New("price is missing before_taxes")
+	if v.BeforeTaxes != nil {
+		p.ExclVAT = *v.BeforeTaxes
+	} else if v.ExclVAT != nil {
+		p.ExclVAT = *v.ExclVAT
 	}
-	p.BeforeTaxes = *value.BeforeTaxes
-	p.Taxes = value.Taxes
+	p.Taxes = v.Taxes
 	return nil
 }
 

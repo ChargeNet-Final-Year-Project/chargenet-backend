@@ -1,7 +1,7 @@
 // Package emulator implements VoltGo, ChargeSync and EcoWatt as independently
 // authenticated simulated operators under /emulator/{slug}/ocpi. Each reads its
 // own seeded network and exchanges commands, telemetry and CDRs over loopback HTTP.
-// The emulators serve OCPI 2.3.0.
+// OCPI 2.3.0 is preferred, with the supported 2.2.1 compatibility subset.
 package emulator
 
 import "strings"

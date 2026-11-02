@@ -89,7 +89,7 @@ CREATE INDEX wallet_transactions_wallet_time ON wallet_transactions(wallet_id,cr
 -- cdrs.session_id is the authoritative relationship; retain legacy cdr_id only
 -- for old binaries. Reads join by session_id and new writes do not need it.
 ALTER TABLE cdrs ADD COLUMN source_cdr_json jsonb;
-ALTER TABLE cdrs ADD COLUMN ocpi_version varchar(8) NOT NULL DEFAULT '2.3.0';
+ALTER TABLE cdrs ADD COLUMN ocpi_version varchar(8) NOT NULL DEFAULT '2.2.1';
 CREATE INDEX cdrs_cpo_time ON cdrs(cpo_id,created_at DESC,id DESC);
 CREATE INDEX cdrs_user ON cdrs(user_id);
 CREATE INDEX sessions_station ON charging_sessions(station_id);
@@ -134,3 +134,4 @@ END $$;
 CREATE TRIGGER session_pricing_immutable BEFORE UPDATE ON charging_sessions
  FOR EACH ROW EXECUTE FUNCTION protect_session_pricing();
 
+ALTER TABLE cpo_partners ALTER COLUMN ocpi_version SET DEFAULT '2.3.0';

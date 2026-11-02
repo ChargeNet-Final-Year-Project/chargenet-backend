@@ -1,3 +1,4 @@
+ALTER TABLE cpo_partners ALTER COLUMN ocpi_version SET DEFAULT '2.3.0';
 ALTER TABLE exchange_rates ADD CONSTRAINT exchange_rates_finite
  CHECK(rate NOT IN ('NaN'::numeric,'Infinity'::numeric,'-Infinity'::numeric));
 CREATE UNIQUE INDEX stations_id_cpo ON stations(id,cpo_id);

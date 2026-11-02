@@ -34,6 +34,8 @@ func New(cfg config.Config, st *store.Store) *Server {
 // The module receivers (locations, tariffs, sessions, cdrs, commands) arrive in
 // OCPI receivers and authenticate with [tokenOperational] — Token C.
 func (s *Server) Register(mux *http.ServeMux) {
+	mux.Handle("/ocpi/emsp/2.2.1", LegacyAdapter(mux, "/ocpi/emsp/2.2.1", VersionURLPath))
+	mux.Handle("/ocpi/emsp/2.2.1/", LegacyAdapter(mux, "/ocpi/emsp/2.2.1", VersionURLPath))
 	// Versions: open to a fresh Token A (how registration starts) and to
 	// Token C (a registered partner re-reads its version details). The
 	// trailing-slash form is what the versions response advertises; the bare

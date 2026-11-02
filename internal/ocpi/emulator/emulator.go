@@ -169,20 +169,21 @@ func (e *Emulator) SelfURL() string { return e.origin + e.profile.basePath() }
 // /emulator/{slug}/ocpi.
 func (e *Emulator) Mount(mux *http.ServeMux) {
 	base := e.profile.basePath()
-	versionRoot := base + "/" + ocpi.VersionNumber
+	mux.Handle(base+"/2.2.1", ocpi.LegacyAdapter(mux, base+"/2.2.1", base+"/2.3.0"))
+	mux.Handle(base+"/2.2.1/", ocpi.LegacyAdapter(mux, base+"/2.2.1", base+"/2.3.0"))
 
 	mux.Handle("GET "+base+"/versions", e.authorize(e.handleVersions))
-	mux.Handle("GET "+versionRoot, e.authorize(e.handleVersionDetails))
-	mux.Handle("GET "+versionRoot+"/", e.authorize(e.handleVersionDetails))
+	mux.Handle("GET "+base+"/2.3.0", e.authorize(e.handleVersionDetails))
+	mux.Handle("GET "+base+"/2.3.0/", e.authorize(e.handleVersionDetails))
 
-	mux.Handle("GET "+versionRoot+"/locations", e.authorize(e.handleLocations))
-	mux.Handle("GET "+versionRoot+"/locations/", e.authorize(e.handleLocations))
-	mux.Handle("GET "+versionRoot+"/tariffs", e.authorize(e.handleTariffs))
-	mux.Handle("GET "+versionRoot+"/tariffs/", e.authorize(e.handleTariffs))
+	mux.Handle("GET "+base+"/2.3.0/locations", e.authorize(e.handleLocations))
+	mux.Handle("GET "+base+"/2.3.0/locations/", e.authorize(e.handleLocations))
+	mux.Handle("GET "+base+"/2.3.0/tariffs", e.authorize(e.handleTariffs))
+	mux.Handle("GET "+base+"/2.3.0/tariffs/", e.authorize(e.handleTariffs))
 
-	mux.Handle("POST "+versionRoot+"/commands/START_SESSION", e.authorize(e.handleStartSession))
-	mux.Handle("POST "+versionRoot+"/commands/STOP_SESSION", e.authorize(e.handleStopSession))
-	mux.Handle("POST "+versionRoot+"/commands/UNLOCK_CONNECTOR", e.authorize(e.handleUnlockConnector))
+	mux.Handle("POST "+base+"/2.3.0/commands/START_SESSION", e.authorize(e.handleStartSession))
+	mux.Handle("POST "+base+"/2.3.0/commands/STOP_SESSION", e.authorize(e.handleStopSession))
+	mux.Handle("POST "+base+"/2.3.0/commands/UNLOCK_CONNECTOR", e.authorize(e.handleUnlockConnector))
 
 	// The chaos knobs of the emulators, reachable by hand (curl) as well as
 	// programmatically. They are not part of OCPI.

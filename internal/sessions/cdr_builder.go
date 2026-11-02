@@ -81,14 +81,17 @@ func BuildCDR(req store.CDRRequest) ([]byte, error) {
 				map[string]any{"type": "TIME", "volume": hours},
 			},
 		}},
-		"total_cost":   map[string]any{"before_taxes": a.Gross},
+		"total_cost":   map[string]any{"excl_vat": a.Gross},
 		"total_energy": round3(a.EnergyKWh),
 		"total_time":   hours,
 		"last_updated": end,
 	}
 
-	for _, item := range doc["tariffs"].([]any) {
-		item.(map[string]any)["tax_included"] = "N/A"
+	if a.OCPIVersion == "2.3.0" {
+		doc["total_cost"] = map[string]any{"before_taxes": a.Gross}
+		for _, item := range doc["tariffs"].([]any) {
+			item.(map[string]any)["tax_included"] = "N/A"
+		}
 	}
 	raw, err := json.Marshal(doc)
 	if err != nil {

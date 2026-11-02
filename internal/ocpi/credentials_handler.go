@@ -54,7 +54,7 @@ func (s *Server) handlePostCredentials(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if _, err := s.Store.DB.ExecContext(r.Context(), `UPDATE cpo_partners SET ocpi_version=$2 WHERE id=$1`, cpo.ID, VersionNumber); err != nil {
+	if _, err := s.Store.DB.ExecContext(r.Context(), `UPDATE cpo_partners SET ocpi_version=$2 WHERE id=$1`, cpo.ID, RequestVersion(r)); err != nil {
 		Fail(w, 500, StatusUnableToUseAPI, "Could not retain the negotiated version.")
 		return
 	}
@@ -99,7 +99,7 @@ func (s *Server) handlePutCredentials(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if _, err := s.Store.DB.ExecContext(r.Context(), `UPDATE cpo_partners SET ocpi_version=$2 WHERE id=$1`, cpo.ID, VersionNumber); err != nil {
+	if _, err := s.Store.DB.ExecContext(r.Context(), `UPDATE cpo_partners SET ocpi_version=$2 WHERE id=$1`, cpo.ID, RequestVersion(r)); err != nil {
 		Fail(w, 500, StatusUnableToUseAPI, "Could not retain the negotiated version.")
 		return
 	}

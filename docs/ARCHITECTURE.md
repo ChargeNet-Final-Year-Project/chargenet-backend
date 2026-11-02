@@ -53,8 +53,9 @@ records let restart recovery finish settlement without restarting a stopped bay.
 
 ## Integration scope
 
-The implemented OCPI 2.3.0 subset covers credentials, locations, tariffs,
-sessions, commands and CDRs. It is not certified against the complete specification. Only tax-free energy
+The implemented OCPI-oriented subset prefers 2.3.0 and has an explicit 2.2.1
+adapter. It covers credentials, locations, tariffs, sessions, commands and CDRs;
+it is not certified against the complete specification. Only tax-free energy
 tariffs are chargeable. Unsupported time fees, restrictions, taxes and billing
 blocks fail closed. All three emulators are Malaysian registered parties with
 physical locations in MY, SG and TH; party identity and location country differ.

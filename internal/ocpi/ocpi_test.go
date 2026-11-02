@@ -178,8 +178,8 @@ func TestVersionsListsChargeNetVersion(t *testing.T) {
 	h, _ := newServer(t)
 
 	versions := success[[]ocpi.Version](t, do(t, h, http.MethodGet, ocpi.VersionsURLPath, voltgoTokenC, nil))
-	if len(versions) != 1 {
-		t.Fatalf("versions = %+v, want one supported version", versions)
+	if len(versions) != 2 || versions[1].Version != ocpi.LegacyVersion {
+		t.Fatalf("versions = %+v, want preferred 2.3.0 and explicit legacy 2.2.1", versions)
 	}
 	if versions[0].Version != ocpi.VersionNumber {
 		t.Fatalf("version = %q, want %q", versions[0].Version, ocpi.VersionNumber)
@@ -701,8 +701,8 @@ func TestStoredCDRDecodesIntoTypes(t *testing.T) {
 	if len(cdr.ChargingPeriods) != 1 || len(cdr.ChargingPeriods[0].Dimensions) != 2 {
 		t.Fatalf("charging_periods = %+v", cdr.ChargingPeriods)
 	}
-	if cdr.TotalEnergy != 12.5 || cdr.TotalTime != 0.5 || cdr.TotalCost.BeforeTaxes != 15 {
-		t.Fatalf("totals = %v/%v/%v", cdr.TotalEnergy, cdr.TotalTime, cdr.TotalCost.BeforeTaxes)
+	if cdr.TotalEnergy != 12.5 || cdr.TotalTime != 0.5 || cdr.TotalCost.ExclVAT != 15 {
+		t.Fatalf("totals = %v/%v/%v", cdr.TotalEnergy, cdr.TotalTime, cdr.TotalCost.ExclVAT)
 	}
 	if cdr.ChargeNet.Gross != 0 {
 		t.Fatal("internal revenue leaked into OCPI document")

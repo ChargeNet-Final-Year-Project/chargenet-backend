@@ -788,7 +788,7 @@ func TestCDRPostSettlesTheSessionOnce(t *testing.T) {
 		"currency":        "MYR",
 		"total_energy":    10.0,
 		"total_time":      0.5, // OCPI states `total_time` in hours
-		"total_cost":      map[string]any{"before_taxes": 999.00},
+		"total_cost":      map[string]any{"excl_vat": 999.00},
 		"cpo_note":        "handled by the field engineer",
 	}
 	post := func(b map[string]any) *httptest.ResponseRecorder {

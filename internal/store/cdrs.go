@@ -44,6 +44,7 @@ type CDRStation struct {
 // SettleAmounts are the money facts of one settlement, computed by the store
 // from the rows it locks so they can never disagree with what is committed.
 type SettleAmounts struct {
+	OCPIVersion     string
 	CDRID           string
 	Currency        string
 	EnergyKWh       float64
@@ -137,7 +138,7 @@ func (s *Store) SettleSession(ctx context.Context, in SettleInput) (*Session, er
 	var original, converted, deduction, unfunded string
 	var originalCurrency, walletCurrency, version, tariffID, countryCode, partyID string
 	var feePct string
-	err = tx.QueryRowContext(ctx, `SELECT s.original_currency,s.wallet_currency,coalesce(c.ocpi_version,'2.3.0'),
+	err = tx.QueryRowContext(ctx, `SELECT s.original_currency,s.wallet_currency,coalesce(c.ocpi_version,'2.2.1'),
  coalesce(q.tariff_id,k.tariff_id,''),c.country_code,c.party_id,
  coalesce(c.platform_fee_pct,$2::numeric),round($3::numeric*s.tariff_per_kwh,2),
  round(round($3::numeric*s.tariff_per_kwh,2)*s.exchange_rate,2)
@@ -166,7 +167,7 @@ func (s *Store) SettleSession(ctx context.Context, in SettleInput) (*Session, er
 	if err != nil {
 		return nil, err
 	}
-	amounts := SettleAmounts{CDRID: NewID("cdr"), Currency: originalCurrency,
+	amounts := SettleAmounts{CDRID: NewID("cdr"), Currency: originalCurrency, OCPIVersion: version,
 		EnergyKWh: in.State.KWhDelivered, DurationSeconds: in.State.DurationSeconds, TariffPerKWh: tariff,
 		Gross: money.Float(original), PlatformFeePct: money.Float(feePct), PlatformFee: money.Float(fee),
 		NetPayout: money.Float(net), EndTime: time.Now().UTC()}

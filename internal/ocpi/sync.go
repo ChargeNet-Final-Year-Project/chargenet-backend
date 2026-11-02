@@ -12,7 +12,7 @@ import (
 	"github.com/chargenet/chargenet-backend/internal/store"
 )
 
-// The pull half of OCPI 2.3.0: the receivers in this package learn
+// The pull half of OCPI 2.2.1: the receivers in this package learn
 // about the network only when a CPO chooses to push it, which leaves ChargeNet
 // blind to a push that was lost — the CPO was restarting, the network blipped —
 // or that a partner which never implemented push has never sent at all. The
@@ -26,7 +26,7 @@ import (
 const DefaultSyncInterval = 5 * time.Minute
 
 // The module paths the pull reads. Unlike ChargeNet's own `VersionURLPath`
-// (`/ocpi/emsp/2.3.0`), these are the *partner's* paths — the same shape as
+// (`/ocpi/emsp/2.2.1`), these are the *partner's* paths — the same shape as
 // [CommandsPath] — because the base URL ChargeNet holds is the CPO's version
 // root, not ours.
 const (
@@ -143,7 +143,7 @@ func (s *Syncer) SyncOne(ctx context.Context, cpo *store.CpoAccount) error {
 	return nil
 }
 
-// pullLocations reads `GET {base_url}/2.3.0/locations`.
+// pullLocations reads `GET {base_url}/2.2.1/locations`.
 func (s *Syncer) pullLocations(ctx context.Context, cpo *store.CpoAccount) ([]Location, error) {
 	data, err := s.client.Do(ctx, cpo, http.MethodGet, locationsPath, nil)
 	if err != nil {
@@ -152,7 +152,7 @@ func (s *Syncer) pullLocations(ctx context.Context, cpo *store.CpoAccount) ([]Lo
 	return decodeList[Location](data)
 }
 
-// syncTariffs reads `GET {base_url}/2.3.0/tariffs` and upserts what it finds.
+// syncTariffs reads `GET {base_url}/2.2.1/tariffs` and upserts what it finds.
 func (s *Syncer) syncTariffs(ctx context.Context, cpo *store.CpoAccount) error {
 	data, err := s.client.Do(ctx, cpo, http.MethodGet, tariffsPath, nil)
 	if err != nil {
